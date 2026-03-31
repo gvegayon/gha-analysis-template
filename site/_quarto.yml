@@ -6,9 +6,9 @@ book:
   title: "Fundamentals of GitHub Action Workflows"
   chapters:
     - index.qmd
-    - 01-repo.qmd
-    - 02-gha.qmd
-    - 03-containers.qmd
+    - 02-repo.qmd
+    - 03-gha.qmd
+    - 04-containers.qmd
 
 format:
   html:

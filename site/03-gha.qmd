@@ -1,0 +1,259 @@
+---
+title: "GitHub Actions "
+---
+
+GitHub Actions (GHA) is a service provided by GitHub that allows using either GitHub or user-hosted computing resources linked to GitHub repositories. In a nutshell, GitHub provides its users with free cloud computing time (2,000 minutes/month)  on any OS, whenever you want (see [here](https://docs.github.com/en/billing/concepts/product-billing/github-actions#free-use-of-github-actions){target="_blank"} for more details).
+
+![Source: GitHub Actions website <https://github.com/features/actions>](https://github.githubassets.com/images/modules/site/features/actions-workflow.svg){width="90%" fig-align="center"}
+
+
+GHA can be a powerful tool for automating processes; not only for software developers, but also for scientists. Using GitHub Actions you can:
+
+- Build a website using `quarto`.
+- Update `Docker` images.
+- `R CMD check` R packages (or any software) on various versions.
+- Build automatic reports (like what we will be doing!).
+
+The core component of GitHub actions is the [workflow files](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions#workflows).
+
+## How they work
+
+1. An event triggers the workflow:
+  - A push to the repository
+  - A pull request
+  - A schedule (e.g., every Monday at 0 hours)
+
+2. The workflow starts a job (or many):
+  - Jobs can be run in parallel or sequentially.
+  - Each job runs on a virtual machine or a container.
+
+3. A typical workflow has the following bits:
+  - Trigger
+  - Configuration of the jobs (e.g., OS, container, environment variables, etc.)
+  - Steps (e.g., install software, run code, etc.)
+
+::: {.callout-tip}
+Using containers can reduce the time it takes to run a workflow. A similar effect can be achieved by caching software and dependencies.
+:::
+
+## Hello world example
+
+The following workflow file--a simple "helloworld" example--can be found [here](./workflows/helloworld.yaml){target="_blank"}
+
+```yaml
+name: GitHub Actions Demo
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+
+      - name: Check out repository code
+        uses: actions/checkout@v5
+
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+
+      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+```
+
+Let's see dissect this example by field
+
+1. `name`: Is the name of the workflow. It can be anything you want. Hopefully, it is descriptive of what the workflow does.
+
+```yaml
+name: GitHub Actions Demo
+```
+
+2. `run-name`: Is the name of the workflow run. Here you can make use of the [context and expression syntax](https://docs.github.com/en/actions/learn-github-actions/contexts#about-contexts-and-expressions){target="_blank"} to make it more informative. In this example, we are using the `github.actor` context to include the username of the person who triggered the workflow.
+
+```yaml
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+```
+
+3. `on`: Is the event that triggers the workflow. In this example, the workflow will be triggered whenever there is a push to the repository. You can also specify other events, such as `pull_request`, `schedule`, etc. You can even specify multiple events that trigger the same workflow. More information about the events can be found [here](https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows){target="_blank"}.
+
+```yaml
+on: [push]
+```
+
+4. `jobs`: Is the section where you define the jobs that will run when the workflow is triggered. In this example, we have one job called `Explore-GitHub-Actions`. Each job has a name and a set of steps that will be executed sequentially.
+
+```yaml
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      ...
+```
+  
+This job in particular runs on the latest version of Ubuntu, which is specified by the `runs-on` field. Some of the available machines can be found [here](https://github.com/actions/runner-images){target="_blank"}. You can also specify a container to run the job in, which we will discuss later.
+
+5. Finally, we have the `steps` section, which is where you define the individual steps that will be executed sequentially. Steps can be either `run` or `uses`. The `run` steps are used to run commands on the runner, while the `uses` steps are used to use actions from the GitHub marketplace. In this example, we have a mix of both types of steps.
+
+```yaml
+steps:
+  ...
+  - name: Check out repository code
+    uses: actions/checkout@v5
+```
+
+Uses the `actions/checkout` version 5 action to check out the repository code. This is a common step that is used in many workflows to ensure that the code is available for the subsequent steps. And
+
+```yaml
+- run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+```
+
+Runs a simple command to print a message to the console. This is just an example of a `run` step, but you can run any command that you would normally run in a terminal. Notice that we are using the `github.event_name` context to include the name of the event that triggered the workflow in the message.
+
+## A more complicated example
+
+Here is a more complicated workflow file (available [here](https://github.com/UofUEpiBio/PHS-7045-egga/blob/c7269f35550732f80772f48f1fc40e0d4df7bf11/.github/workflows/build-it.yaml){target="_blank"}). This workflow file uses (i) a schedule to trigger the event, (ii) a container to run the job, (iii) thir-party actions from the GitHub marketplace, and (iv) command line calls to install software and run code:    
+
+```yaml
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  push:
+    branches: [main, master]
+  schedule:
+    - cron: '0 0 * * 0' # https://crontab.guru/
+
+name: Build it
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    container: rocker/tidyverse:4.2.2
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPO: ${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+    
+      # Installing quarto
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 0.3.71
+    
+      - name: Install packags and render
+        run: |
+          install2.r xml2 quarto
+          quarto render README.qmd
+    
+      # There's an error with EndBug, need to use the safe.directory
+      # option. More here
+      # https://git-scm.com/docs/git-config#Documentation/git-config.txt-safedirectory
+      - name: Dealing with GitConfig
+        run: |
+          git config --global --add safe.directory /__w/${GITHUB_REPO}/${GITHUB_REPO}
+          
+      - uses: EndBug/add-and-commit@v9
+        with:
+          add: README.md
+```
+
+Let's see bit by bit
+
+### GHA: Trigger
+
+When the action triggers:
+
+- When there's a push to the main or master branches.
+
+- And once a week, every Monday at 0 hours.
+
+```yml
+on:
+  push:
+    branches: [main, master]
+  schedule:
+    - cron: '0 0 * * 0' # https://crontab.guru/
+```
+
+### GHA: Configuration of the Jobs
+
+- It runs on the lastest version of Ubuntu
+
+- But within a container ([rocker/tidyverse:4.2.2](https://rocker-project.org/images/versioned/rstudio.html){target="blank"})
+
+```yml
+Build:
+    runs-on: ubuntu-latest
+    container: rocker/tidyverse:4.2.2
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPO: ${{ github.event.repository.name }}
+```
+
+- It sets two environment variables (accessible with the dollar sign): `GITHUB_PAT` and `GITHUB_REPO`.
+
+### GHA: Steps
+
+The `Build` job has five steps:
+
+1. Clone the current repository.
+2. Install `quarto` version 0.3.71.
+3. Install the `xml2` and `quarto` R packages and render the `README.qmd` document.
+4. ...
+5. Commit the changes.
+
+```yml
+- uses: actions/checkout@v3
+  with:
+    fetch-depth: 0
+
+- uses: quarto-dev/quarto-actions/setup@v2
+  with:
+    version: 0.3.71
+
+- name: Install packags and render
+  run: |
+    install2.r xml2 quarto
+    quarto render README.qmd
+
+- name: Dealing with GitConfig
+  run: |
+    git config --global --add safe.directory /__w/${GITHUB_REPO}/${GITHUB_REPO}
+    
+- uses: EndBug/add-and-commit@v9
+  with:
+    add: README.md
+```
+
+Of these five steps, steps 1, 2, and 5 were pulled directly from the [GA marketplace](https://github.com/marketplace/actions/){target="_blank"}.
+
+## Secrets
+
+In some situations, we may need to provide sensitive information to the workflow, such as API keys, database credentials, etc. Instead of hardcoding this information in the workflow file, we can use GitHub Secrets to store this information securely. Secrets are encrypted and can only be accessed by the workflow when it is running. You can create secrets in the repository settings under the "Secrets" tab. Once you have created a secret, you can access it in your workflow using the `secrets` context.
+
+Here is an example from GitHub's [documentation](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets#using-secrets-in-a-workflow){target="_blank"}:
+
+```yaml
+steps:
+  - name: Hello world action
+    with: # Set the secret as an input
+      super_secret: ${{ secrets.SuperSecret }}
+    env: # Or as an environment variable
+      super_secret: ${{ secrets.SuperSecret }}
+```
+
+One nice feature is that, even if you try to print the value of a secret in the console, it will be masked and not visible. This is a nice security feature that prevents accidental exposure of sensitive information.
+
+::: {.callout-warning}
+GitHub also provides a different mechanism for ["large secrets"](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets#storing-large-secrets) that can be used to store sensitive information in a more secure way. That said, as of today, encrypted secrets are not automatically masked, per GitHub's documentation.
+:::
+

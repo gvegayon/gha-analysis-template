@@ -1,0 +1,22 @@
+---
+title: "Repositories"
+---
+
+## Repository structure
+
+There is no one-size-fits-all structure for repositories, but there are some common practices that can help make your repository more organized and easier to navigate. Here are some common components of a repository:
+
+- `README.md`: A markdown file that provides an overview of the repository, how to use it, and any other relevant information.
+
+- `data/`: Where the data is stored (duh!). BUT, it is a good practice to still have it, **even if we don't have data included in the repo**. The idea of the data folder is to indicate how to access the data (besides some documentation about it).
+
+- `.github/workflows/`: Where the workflow files are stored. Each workflow file is a YAML file that defines the workflow. Some common workflows include:
+    - **Container build and push**: Take a container image and release it to one of the container registries (e.g., Docker Hub, GitHub Container Registry, etc.).
+    - **GitHub Pages**: Build a website using GitHub Pages (e.g., using `quarto`).
+    - **R CMD check**: Check R packages (or any software) on various versions of the OS and software dependencies.
+    - **Automatic reports**: Build automatic reports (like what we will be doing!).
+
+    We will discuss some of these workflows later.
+
+
+- `AGENTS.md`: A markdown file that provides an overview of the agents used in the repository, how to use them, and any other relevant information.
