@@ -14,7 +14,8 @@
 				"tianyishi.rmarkdown",
 				"openai.chatgpt",
 				"github.vscode-github-actions",
-				"ritwickdey.liveserver"
+				"ritwickdey.liveserver",
+				"ms-vscode.live-server"
 			]
 		}
 	},
