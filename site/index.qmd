@@ -1,0 +1,5 @@
+---
+title: Introduction
+---
+
+In this session, I will introduce the fundamentals of GitHub Actions and demonstrate how these workflows, along with tools like GitHub Copilot, can help automate different components of day-to-day modeling and analytics processes. The session will highlight practical, real-world examples of building simple pipelines that can run models, process data, and support routine reporting and analysis tasks. Attendees are expected to have a working GitHub account, as well as GitHub desktop (or knowledge how to use GitHub on their computers) up and running.

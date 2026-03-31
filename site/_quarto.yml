@@ -1,0 +1,15 @@
+project:
+  type: book
+  output-dir: ../_docs
+
+book:
+  title: "Fundamentals of GitHub Action Workflows"
+  chapters:
+    - index.qmd
+    - 01-repo.qmd
+    - 02-gha.qmd
+    - 03-containers.qmd
+
+format:
+  html:
+    toc: true

@@ -13,10 +13,10 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     container:
-      image: ghcr.io/gvegayon/book-ai:latest
+      image: ghcr.io/${{ github.repository }}:latest
 
     steps:
     - uses: actions/checkout@v6
